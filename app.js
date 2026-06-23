@@ -109,7 +109,10 @@ function onPointerMove(e){
     renderObjects();
   } else if(gesture.type==="scale"&&gesture.pointerId===e.pointerId){
     const dx=p.x-gesture.center.x,dy=p.y-gesture.center.y;
-    selected.size=Math.max(8,Math.min(60,gesture.startSize+Math.hypot(dx,dy)*1.45));
+    const currentDistance=Math.hypot(dx,dy);
+    // Move the handle away from the object to enlarge; toward it to shrink.
+    const distanceChange=currentDistance-gesture.startDistance;
+    selected.size=Math.max(8,Math.min(60,gesture.startSize+distanceChange*1.45));
     renderObjects();
   } else if(gesture.type==="rotate"&&gesture.pointerId===e.pointerId){
     const a=Math.atan2(p.y-gesture.center.y,p.x-gesture.center.x)*180/Math.PI;
@@ -128,7 +131,15 @@ function beginTool(type,e){
   e.preventDefault();e.stopPropagation();
   saveState();
   const p=artPoint(e);
-  gesture={type,pointerId:e.pointerId,center:{x:selected.x,y:selected.y},startSize:selected.size,startRotate:selected.rotate,startAngle:Math.atan2(p.y-selected.y,p.x-selected.x)*180/Math.PI};
+  gesture={
+    type,
+    pointerId:e.pointerId,
+    center:{x:selected.x,y:selected.y},
+    startSize:selected.size,
+    startRotate:selected.rotate,
+    startAngle:Math.atan2(p.y-selected.y,p.x-selected.x)*180/Math.PI,
+    startDistance:Math.hypot(p.x-selected.x,p.y-selected.y)
+  };
 }
 document.getElementById("scaleHandle").addEventListener("pointerdown",e=>beginTool("scale",e));
 document.getElementById("rotateHandle").addEventListener("pointerdown",e=>beginTool("rotate",e));
