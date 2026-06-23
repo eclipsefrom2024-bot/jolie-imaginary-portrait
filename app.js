@@ -38,17 +38,23 @@ function shape(contents, name, layer="portrait"){
   return {name, contents, layer};
 }
 
-// iPhone Safari can be unreliable with SVGElement.innerHTML.
-// Parse SVG markup into real SVG nodes instead.
-function appendSvgMarkup(parent, markup){
-  const parser = new DOMParser();
-  const parsed = parser.parseFromString(
-    `<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`,
-    "image/svg+xml"
-  );
-  [...parsed.documentElement.childNodes].forEach(node => {
-    parent.appendChild(document.importNode(node, true));
-  });
+// iPhone Safari is more reliable when movable SVG assets are rendered as data-URI images.
+// This avoids Safari's inconsistent parsing of SVG fragments inserted into an SVG <g>.
+function makeSvgDataUri(markup){
+  const fullSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">${markup}</svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(fullSvg);
+}
+function appendAssetImage(parent, markup){
+  const image = document.createElementNS(svgNS, "image");
+  const uri = makeSvgDataUri(markup);
+  image.setAttribute("x", "0");
+  image.setAttribute("y", "0");
+  image.setAttribute("width", "240");
+  image.setAttribute("height", "240");
+  image.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  image.setAttribute("href", uri);
+  image.setAttributeNS("http://www.w3.org/1999/xlink", "href", uri);
+  parent.appendChild(image);
 }
 
 // Original decorative assets. They are intentionally generic and do not copy any particular artwork.
@@ -105,7 +111,10 @@ function addAsset(asset, preset={}){
   pushUndo();
   const layer = asset.layer === "decor" ? decorationLayer : portraitLayer;
   const g = el("g", {class:"movable", "data-name":asset.name, tabindex:"0"}, layer);
-  appendSvgMarkup(g, asset.contents);
+  appendAssetImage(g, asset.contents);
+  const hit = el("rect", {x:"0", y:"0", width:"240", height:"240", fill:"transparent", "pointer-events":"all"}, g);
+  // Keep the hit area behind the visual asset.
+  g.insertBefore(hit, g.firstChild);
   const x = preset.x ?? 540 + (Math.random()*90-45);
   const y = preset.y ?? 510 + (Math.random()*90-45);
   const scale = preset.scale ?? 1;
