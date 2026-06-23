@@ -122,3 +122,5 @@ input[type="range"]{accent-color:#1c1a18;width:100%}
   }
   .editor-v4 #artboard{max-height:none}
 }
+
+.download-final:disabled{opacity:.72;cursor:wait;}
