@@ -108,6 +108,24 @@ function updateTransform(node){
   if(node===selected) updateSelectionBox();
 }
 
+const deleteHandle = document.getElementById("deleteHandle");
+const lockHandle = document.getElementById("lockHandle");
+const lockIcon = document.getElementById("lockIcon");
+const rotateHandle = document.getElementById("rotateHandle");
+const scaleHandle = document.getElementById("scaleHandle");
+
+let gesture = null;
+let activePointers = new Map();
+
+function isLocked(node){
+  return node?.dataset.locked === "true";
+}
+function setLocked(node, locked){
+  if(!node) return;
+  node.dataset.locked = locked ? "true" : "false";
+  node.style.opacity = locked ? ".84" : "1";
+  lockIcon.textContent = locked ? "🔒" : "🔓";
+}
 function select(node){
   selected = node;
   [...document.querySelectorAll(".movable")].forEach(n=>n.classList.remove("is-selected"));
@@ -115,51 +133,163 @@ function select(node){
     selected.classList.add("is-selected");
     scaleRange.value = selected.dataset.scale || 1;
     rotateRange.value = selected.dataset.rotate || 0;
+    setLocked(selected, isLocked(selected));
     selectionBox.setAttribute("display","block");
     updateSelectionBox();
-  } else selectionBox.setAttribute("display","none");
+  } else {
+    selectionBox.setAttribute("display","none");
+  }
 }
-
-function updateSelectionBox(){
-  if(!selected) return;
+function getSelectionMetrics(){
+  if(!selected) return null;
   const bb = selected.getBBox();
   const x = parseFloat(selected.dataset.x), y=parseFloat(selected.dataset.y);
   const s = parseFloat(selected.dataset.scale);
-  const pad = 16;
-  selectionRect.setAttribute("x", x + (bb.x-120)*s - pad);
-  selectionRect.setAttribute("y", y + (bb.y-120)*s - pad);
-  selectionRect.setAttribute("width", bb.width*s + pad*2);
-  selectionRect.setAttribute("height", bb.height*s + pad*2);
+  const pad = 18;
+  return {
+    x: x + (bb.x-120)*s - pad,
+    y: y + (bb.y-120)*s - pad,
+    w: bb.width*s + pad*2,
+    h: bb.height*s + pad*2,
+    cx: x + ((bb.x + bb.width/2)-120)*s,
+    cy: y + ((bb.y + bb.height/2)-120)*s
+  };
 }
-
+function updateSelectionBox(){
+  if(!selected) return;
+  const m = getSelectionMetrics();
+  selectionRect.setAttribute("x", m.x);
+  selectionRect.setAttribute("y", m.y);
+  selectionRect.setAttribute("width", m.w);
+  selectionRect.setAttribute("height", m.h);
+  deleteHandle.setAttribute("transform", `translate(${m.x} ${m.y})`);
+  lockHandle.setAttribute("transform", `translate(${m.x + m.w} ${m.y})`);
+  rotateHandle.setAttribute("transform", `translate(${m.x + m.w} ${m.y + m.h})`);
+  scaleHandle.setAttribute("transform", `translate(${m.x} ${m.y + m.h})`);
+  lockIcon.textContent = isLocked(selected) ? "🔒" : "🔓";
+}
 function svgPoint(evt){
   const pt = artboard.createSVGPoint();
   pt.x = evt.clientX; pt.y=evt.clientY;
   return pt.matrixTransform(artboard.getScreenCTM().inverse());
 }
+function pointDistance(a,b){ return Math.hypot(b.x-a.x,b.y-a.y); }
+function pointAngle(a,b){ return Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI; }
 
+function beginMove(evt, node){
+  if(isLocked(node)) return;
+  const p = svgPoint(evt);
+  gesture = {
+    type:"move",
+    node,
+    pointerId:evt.pointerId,
+    startX:parseFloat(node.dataset.x),
+    startY:parseFloat(node.dataset.y),
+    startPoint:p
+  };
+  pushUndo();
+  node.setPointerCapture?.(evt.pointerId);
+}
+function beginHandleGesture(evt, type){
+  if(!selected || isLocked(selected)) return;
+  evt.preventDefault(); evt.stopPropagation();
+  const p=svgPoint(evt), m=getSelectionMetrics();
+  gesture={
+    type,
+    node:selected,
+    pointerId:evt.pointerId,
+    startPoint:p,
+    center:{x:m.cx,y:m.cy},
+    startScale:parseFloat(selected.dataset.scale),
+    startRotate:parseFloat(selected.dataset.rotate),
+    startDistance:Math.max(1, Math.hypot(p.x-m.cx,p.y-m.cy)),
+    startAngle:Math.atan2(p.y-m.cy,p.x-m.cx)*180/Math.PI
+  };
+  pushUndo();
+  artboard.setPointerCapture?.(evt.pointerId);
+}
 function onPointerDown(evt){
   evt.stopPropagation();
   const node = evt.currentTarget;
   select(node);
-  dragging = true;
-  const p = svgPoint(evt);
-  dragStart = {px:p.x,py:p.y,x:parseFloat(node.dataset.x),y:parseFloat(node.dataset.y)};
-  node.setPointerCapture(evt.pointerId);
-  pushUndo();
+  activePointers.set(evt.pointerId, {point:svgPoint(evt), node});
+  // Second finger on the same unlocked object = IG-style pinch / rotate.
+  const same = [...activePointers.entries()].filter(([,v])=>v.node===node);
+  if(same.length >= 2 && !isLocked(node)){
+    const [a,b] = same.slice(-2).map(([,v])=>v.point);
+    const m=getSelectionMetrics();
+    gesture = {
+      type:"pinch",
+      node,
+      ids:same.slice(-2).map(([id])=>id),
+      startScale:parseFloat(node.dataset.scale),
+      startRotate:parseFloat(node.dataset.rotate),
+      startDistance:Math.max(1,pointDistance(a,b)),
+      startAngle:pointAngle(a,b),
+      startCenter:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},
+      origin:{x:parseFloat(node.dataset.x),y:parseFloat(node.dataset.y)}
+    };
+    pushUndo();
+    return;
+  }
+  beginMove(evt,node);
 }
-artboard.addEventListener("pointermove",(evt)=>{
-  if(!dragging||!selected) return;
+function onPointerMove(evt){
+  if(activePointers.has(evt.pointerId)) activePointers.get(evt.pointerId).point = svgPoint(evt);
+  if(!gesture || !selected) return;
   const p=svgPoint(evt);
-  selected.dataset.x = dragStart.x+(p.x-dragStart.px);
-  selected.dataset.y = dragStart.y+(p.y-dragStart.py);
-  updateTransform(selected);
-});
-artboard.addEventListener("pointerup",()=>{dragging=false;});
+  const node=gesture.node;
+  if(gesture.type==="move" && evt.pointerId===gesture.pointerId){
+    node.dataset.x=gesture.startX+(p.x-gesture.startPoint.x);
+    node.dataset.y=gesture.startY+(p.y-gesture.startPoint.y);
+    updateTransform(node);
+  } else if(gesture.type==="rotate" && evt.pointerId===gesture.pointerId){
+    const angle=Math.atan2(p.y-gesture.center.y,p.x-gesture.center.x)*180/Math.PI;
+    node.dataset.rotate=gesture.startRotate+(angle-gesture.startAngle);
+    rotateRange.value=node.dataset.rotate;
+    updateTransform(node);
+  } else if(gesture.type==="scale" && evt.pointerId===gesture.pointerId){
+    const dist=Math.max(1,Math.hypot(p.x-gesture.center.x,p.y-gesture.center.y));
+    node.dataset.scale=Math.min(3,Math.max(.25,gesture.startScale*(dist/gesture.startDistance)));
+    scaleRange.value=node.dataset.scale;
+    updateTransform(node);
+  } else if(gesture.type==="pinch" && gesture.ids.includes(evt.pointerId)){
+    const pts=gesture.ids.map(id=>activePointers.get(id)?.point).filter(Boolean);
+    if(pts.length===2){
+      const [a,b]=pts;
+      const dist=Math.max(1,pointDistance(a,b));
+      const angle=pointAngle(a,b);
+      const center={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      node.dataset.scale=Math.min(3,Math.max(.25,gesture.startScale*(dist/gesture.startDistance)));
+      node.dataset.rotate=gesture.startRotate+(angle-gesture.startAngle);
+      node.dataset.x=gesture.origin.x+(center.x-gesture.startCenter.x);
+      node.dataset.y=gesture.origin.y+(center.y-gesture.startCenter.y);
+      scaleRange.value=node.dataset.scale; rotateRange.value=node.dataset.rotate;
+      updateTransform(node);
+    }
+  }
+}
+function endPointer(evt){
+  activePointers.delete(evt.pointerId);
+  if(gesture?.pointerId===evt.pointerId || (gesture?.ids && gesture.ids.includes(evt.pointerId))) gesture=null;
+}
+artboard.addEventListener("pointermove", onPointerMove);
+artboard.addEventListener("pointerup", endPointer);
+artboard.addEventListener("pointercancel", endPointer);
 artboard.addEventListener("pointerdown",(e)=>{
   if(e.target===artboard || e.target===bg){ select(null); }
 });
 
+deleteHandle.addEventListener("pointerdown",(e)=>{
+  e.preventDefault(); e.stopPropagation();
+  if(selected){pushUndo(); selected.remove(); select(null);}
+});
+lockHandle.addEventListener("pointerdown",(e)=>{
+  e.preventDefault(); e.stopPropagation();
+  if(selected) setLocked(selected,!isLocked(selected));
+});
+rotateHandle.addEventListener("pointerdown",(e)=>beginHandleGesture(e,"rotate"));
+scaleHandle.addEventListener("pointerdown",(e)=>beginHandleGesture(e,"scale"));
 const scaleRange = document.getElementById("scaleRange");
 const rotateRange = document.getElementById("rotateRange");
 scaleRange.addEventListener("input",()=>{if(selected){selected.dataset.scale=scaleRange.value;updateTransform(selected);}});
@@ -189,7 +319,7 @@ function pushUndo(){
 function bindMovables(){
   document.querySelectorAll(".movable").forEach(g=>{
     g.addEventListener("pointerdown", onPointerDown);
-    g.addEventListener("click",(e)=>{e.stopPropagation();select(g);});
+    if(isLocked(g)) g.style.opacity=".84";
   });
 }
 document.getElementById("undoBtn").addEventListener("click",()=>{
