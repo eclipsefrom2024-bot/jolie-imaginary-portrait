@@ -38,6 +38,19 @@ function shape(contents, name, layer="portrait"){
   return {name, contents, layer};
 }
 
+// iPhone Safari can be unreliable with SVGElement.innerHTML.
+// Parse SVG markup into real SVG nodes instead.
+function appendSvgMarkup(parent, markup){
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(
+    `<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`,
+    "image/svg+xml"
+  );
+  [...parsed.documentElement.childNodes].forEach(node => {
+    parent.appendChild(document.importNode(node, true));
+  });
+}
+
 // Original decorative assets. They are intentionally generic and do not copy any particular artwork.
 const ASSETS = {
   faces: [
@@ -72,6 +85,7 @@ const ASSETS = {
 };
 
 function renderPreview(content){
+  // Preview is inserted in HTML, where SVG markup is safe to render.
   return viewBoxGroup(content);
 }
 
@@ -91,7 +105,7 @@ function addAsset(asset, preset={}){
   pushUndo();
   const layer = asset.layer === "decor" ? decorationLayer : portraitLayer;
   const g = el("g", {class:"movable", "data-name":asset.name, tabindex:"0"}, layer);
-  g.innerHTML = asset.contents;
+  appendSvgMarkup(g, asset.contents);
   const x = preset.x ?? 540 + (Math.random()*90-45);
   const y = preset.y ?? 510 + (Math.random()*90-45);
   const scale = preset.scale ?? 1;
