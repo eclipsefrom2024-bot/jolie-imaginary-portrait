@@ -64,3 +64,61 @@ input[type="range"]{accent-color:#1c1a18;width:100%}
   .howto{grid-template-columns:1fr}
   .transform-grid{grid-template-columns:1fr}
 }
+
+
+/* ===== V4 mobile-first layout refinement ===== */
+.editor-v4{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+.editor-v4 .controls-card{order:1}
+.editor-v4 .canvas-card{order:2}
+.canvas-hint{font-size:12px;color:#8a7f72}
+.editor-v4 .mini-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:10px 0 18px;
+}
+.editor-v4 .mini-actions button{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:10px;
+  padding:10px 8px;
+  font-size:13px;
+}
+.download-zone{
+  margin:24px auto 0;
+  max-width:760px;
+  text-align:center;
+  padding:0 2px;
+}
+.download-final{
+  width:100%;
+  min-height:56px;
+  font-size:16px;
+  letter-spacing:.02em;
+  box-shadow:0 12px 28px rgba(28,26,24,.18);
+}
+.download-zone p{font-size:12px;color:#6c6258;margin:11px 0 0}
+.object-handle{cursor:pointer;touch-action:none}
+.object-handle:active{transform:scale(.94)}
+@media(min-width:921px){
+  .editor-v4 .controls-card{max-width:920px;margin:0 auto;width:100%}
+  .editor-v4 .canvas-card{max-width:760px;margin:0 auto;width:100%}
+  .editor-v4 .asset-grid{grid-template-columns:repeat(5,1fr)}
+  .editor-v4 .mini-actions{grid-template-columns:repeat(5,1fr)}
+}
+@media(max-width:920px){
+  .editor-wrap.editor-v4{display:flex}
+  .editor-v4 .canvas-card{
+    position:static;
+    top:auto;
+    z-index:auto;
+    border-radius:24px;
+    margin:0;
+    padding:16px;
+  }
+  .editor-v4 #artboard{max-height:none}
+}
