@@ -40,8 +40,26 @@
             <text x="540" y="1315" text-anchor="middle" class="export-meta">2026.07.01–09.30 · #MyImaginaryPortrait #JolieMuseum</text>
           </g>
 
-          <g id="selectionBox" pointer-events="none" display="none">
-            <rect id="selectionRect" x="0" y="0" width="0" height="0" rx="12" fill="none" stroke="#1C1A18" stroke-width="5" stroke-dasharray="14 10"/>
+          <g id="selectionBox" display="none">
+            <rect id="selectionRect" x="0" y="0" width="0" height="0" rx="12" fill="none" stroke="#1C1A18" stroke-width="5" stroke-dasharray="14 10" pointer-events="none"/>
+            <g id="objectToolbar">
+              <g id="deleteHandle" class="object-handle" role="button" aria-label="刪除物件">
+                <circle r="27" fill="#C94F4F" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="26" fill="#fff">×</text>
+              </g>
+              <g id="lockHandle" class="object-handle" role="button" aria-label="鎖定物件">
+                <circle r="27" fill="#1C1A18" stroke="#fff" stroke-width="5"/>
+                <text id="lockIcon" text-anchor="middle" y="8" font-size="20" fill="#fff">🔒</text>
+              </g>
+              <g id="rotateHandle" class="object-handle" role="button" aria-label="旋轉物件">
+                <circle r="27" fill="#1B6F7A" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="25" fill="#fff">↻</text>
+              </g>
+              <g id="scaleHandle" class="object-handle" role="button" aria-label="縮放物件">
+                <circle r="27" fill="#E5A63F" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="27" fill="#1C1A18">＋</text>
+              </g>
+            </g>
           </g>
         </svg>
       </div>
