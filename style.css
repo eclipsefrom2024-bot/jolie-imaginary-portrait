@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+:root{
+  --ink:#1c1a18;
+  --paper:#f4efe6;
+  --paper2:#fffdfa;
+  --line:#d9d0c3;
+  --accent:#c94f4f;
+  --accent2:#1b6f7a;
+  --shadow:0 18px 60px rgba(49,36,24,.12);
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#efe8dc,#f7f3ed 45%,#eee5d6);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+.app-shell{max-width:1280px;margin:auto;padding:28px 18px 60px}
+.hero{text-align:center;margin:8px auto 26px;max-width:700px}
+.eyebrow{font-size:11px;letter-spacing:.14em;font-weight:700;color:#6a5f52;margin-bottom:12px}
+h1{font-family:"Playfair Display","Noto Sans TC",serif;font-size:clamp(34px,6vw,64px);letter-spacing:.02em;margin:0 0 8px}
+.hero p{margin:0;color:#635a50;font-size:15px}
+.editor-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(340px,.9fr);gap:22px;align-items:start}
+.canvas-card,.controls-card{background:rgba(255,253,250,.9);border:1px solid rgba(141,116,88,.18);box-shadow:var(--shadow);border-radius:24px}
+.canvas-card{padding:16px}
+.canvas-topline{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;padding:0 4px;font-size:13px;color:#766d63}
+.text-btn{border:0;background:none;color:#9c3a3a;text-decoration:underline;padding:4px}
+#artboard{display:block;width:100%;height:auto;max-height:72vh;border-radius:16px;border:1px solid #e7ded2;background:#f7f2e8;touch-action:none}
+.controls-card{padding:18px}
+.step-title{font-weight:700;margin:3px 0 11px;font-size:14px}
+.tabs{display:flex;gap:6px;overflow:auto;padding-bottom:6px;margin-bottom:10px}
+.tab{border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:999px;white-space:nowrap;font-size:13px}
+.tab.active{background:#1c1a18;color:#fff;border-color:#1c1a18}
+.asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-height:148px}
+.asset-btn{border:1px solid var(--line);background:#fffdfa;border-radius:14px;min-height:102px;padding:7px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;transition:.18s transform,.18s box-shadow}
+.asset-btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(38,27,18,.10)}
+.asset-preview{display:grid;place-items:center;width:100%;height:56px}
+.asset-preview svg{width:62px;height:56px;overflow:visible}
+.asset-name{font-size:12px;color:#5e554d}
+.transform-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:12px;font-weight:600;color:#5e554d;display:grid;gap:6px}
+input[type="range"]{accent-color:#1c1a18;width:100%}
+.mini-actions{display:flex;gap:8px;margin:11px 0 18px}
+.mini-actions button,.secondary{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 10px;font-size:13px;flex:1}
+.bg-palette{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.bg-dot{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #c8bfb4}
+.bg-dot.active{outline:3px solid #1c1a18;outline-offset:2px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.primary{grid-column:1/-1;border:0;border-radius:12px;background:#1c1a18;color:#fff;padding:13px;font-weight:700}
+.cafe-note{margin-top:14px;border-radius:13px;background:#f1e8d9;padding:12px 13px;font-size:12px;line-height:1.65;color:#594d42}
+.howto{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0 0}
+.howto div{background:rgba(255,255,255,.68);border:1px solid rgba(141,116,88,.13);border-radius:14px;padding:14px;font-size:13px;color:#64594f}
+.howto b{font-size:18px;margin-right:5px}
+.export-title{font-family:"Playfair Display","Noto Sans TC",serif;font-size:46px;font-weight:700;fill:#171514}
+.export-sub{font-size:17px;font-weight:700;fill:#2d2924}
+.export-meta{font-size:14px;fill:#5f574f}
+@media(max-width:920px){
+  .editor-wrap{grid-template-columns:1fr}
+  .canvas-card{position:sticky;top:0;z-index:2;border-radius:0;margin:0 -18px;padding:12px 18px 16px}
+  #artboard{max-height:56vh}
+}
+@media(max-width:430px){
+  .app-shell{padding:18px 12px 40px}
+  .canvas-card{margin:0 -12px;padding:10px 12px 14px}
+  .asset-grid{grid-template-columns:repeat(3,1fr)}
+  .howto{grid-template-columns:1fr}
+  .transform-grid{grid-template-columns:1fr}
+}

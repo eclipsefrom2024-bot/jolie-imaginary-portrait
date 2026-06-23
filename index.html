@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#efe9df" />
+  <title>我的想像肖像｜莉．瓷藝博物館</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div class="eyebrow">JOLIE MUSEUM × PICASSO IMAGINARY PORTRAITS</div>
+      <h1>我的想像肖像</h1>
+      <p>拼出一張不按規則的臉，留下你的夏日藝術記憶。</p>
+    </header>
+
+    <section class="editor-wrap" aria-label="肖像編輯器">
+      <div class="canvas-card">
+        <div class="canvas-topline">
+          <span>自由拖曳、縮放、旋轉</span>
+          <button class="text-btn" id="removeSelected" type="button">移除選取</button>
+        </div>
+
+        <svg id="artboard" viewBox="0 0 1080 1350" role="img" aria-label="可編輯想像肖像畫布" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="14" stdDeviation="14" flood-opacity=".18"/>
+            </filter>
+          </defs>
+          <rect id="bg" x="0" y="0" width="1080" height="1350" fill="#F7F2E8"/>
+          <g id="decorationLayer"></g>
+          <g id="portraitLayer"></g>
+          <g id="overlayLayer"></g>
+
+          <g id="footerLayer">
+            <rect x="0" y="1170" width="1080" height="180" fill="rgba(255,255,255,.92)"/>
+            <text x="540" y="1233" text-anchor="middle" class="export-title">我的想像肖像</text>
+            <text x="540" y="1275" text-anchor="middle" class="export-sub">PICASSO IMAGINARY PORTRAITS · 莉．瓷藝博物館</text>
+            <text x="540" y="1315" text-anchor="middle" class="export-meta">2026.07.01–09.30 · #MyImaginaryPortrait #JolieMuseum</text>
+          </g>
+
+          <g id="selectionBox" pointer-events="none" display="none">
+            <rect id="selectionRect" x="0" y="0" width="0" height="0" rx="12" fill="none" stroke="#1C1A18" stroke-width="5" stroke-dasharray="14 10"/>
+          </g>
+        </svg>
+      </div>
+
+      <aside class="controls-card">
+        <div class="step-title">1. 選擇素材</div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="faces" type="button">臉型</button>
+          <button class="tab" data-tab="eyes" type="button">眼睛</button>
+          <button class="tab" data-tab="features" type="button">五官</button>
+          <button class="tab" data-tab="style" type="button">配件</button>
+          <button class="tab" data-tab="decor" type="button">花紋</button>
+        </div>
+        <div id="assetGrid" class="asset-grid"></div>
+
+        <div class="step-title">2. 調整選取素材</div>
+        <div class="transform-grid">
+          <label>大小
+            <input id="scaleRange" type="range" min="0.35" max="2.4" step="0.01" value="1" />
+          </label>
+          <label>旋轉
+            <input id="rotateRange" type="range" min="-180" max="180" step="1" value="0" />
+          </label>
+        </div>
+        <div class="mini-actions">
+          <button id="forwardBtn" type="button">往前一層</button>
+          <button id="backBtn" type="button">往後一層</button>
+        </div>
+
+        <div class="step-title">3. 背景</div>
+        <div id="bgPalette" class="bg-palette"></div>
+
+        <div class="actions">
+          <button id="undoBtn" class="secondary" type="button">↶ 復原</button>
+          <button id="resetBtn" class="secondary" type="button">重設</button>
+          <button id="randomBtn" class="secondary" type="button">隨機靈感</button>
+          <button id="downloadBtn" class="primary" type="button">下載我的肖像 PNG</button>
+        </div>
+
+        <div class="cafe-note">
+          <strong>完成後別急著走！</strong><br>
+          出示你的作品畫面，到寶德旺 Café 享限定優惠。
+        </div>
+      </aside>
+    </section>
+
+    <section class="howto">
+      <div><b>①</b> 點選素材加入畫布</div>
+      <div><b>②</b> 用手指拖曳到想放的位置</div>
+      <div><b>③</b> 下載、分享，帶著作品去喝一杯</div>
+    </section>
+  </main>
+
+  <template id="assetTemplate">
+    <button class="asset-btn" type="button">
+      <span class="asset-preview"></span>
+      <span class="asset-name"></span>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
