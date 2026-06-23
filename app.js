@@ -14,8 +14,13 @@ let undoStack = [];
 let gesture = null;
 let pointers = new Map();
 
-function spritePosition(asset){
-  return `${asset.x * 25}% ${asset.y * (100/(SPRITE_ROWS-1))}%`;
+function spriteClip(asset, className=""){
+  // Use a real <img> plus an overflow-hidden frame.
+  // iPhone Safari is much more reliable with <img> than CSS background sprites.
+  return `<span class="sprite-clip ${className}">
+    <img class="sprite-sheet" src="sprite.png?v=13" alt="" draggable="false"
+      style="left:-${asset.x * 100}%;top:-${asset.y * 100}%;">
+  </span>`;
 }
 function saveState(){
   undoStack.push(JSON.stringify({bg:artboard.style.background, objects:objects.map(o=>({...o}))}));
@@ -35,7 +40,7 @@ function renderAssets(){
   ASSETS.filter(a=>a.category===activeTab).forEach(asset=>{
     const btn=document.createElement("button");
     btn.className="asset-btn";
-    btn.innerHTML=`<span class="asset-swatch" style="background-position:${spritePosition(asset)}"></span><span class="asset-name">${asset.name}</span>`;
+    btn.innerHTML=`${spriteClip(asset, "asset-swatch")}<span class="asset-name">${asset.name}</span>`;
     btn.addEventListener("click",()=>addObject(asset));
     assetGrid.appendChild(btn);
   });
@@ -65,7 +70,7 @@ function renderObjects(){
     node.style.left=`${o.x}%`; node.style.top=`${o.y}%`; node.style.width=`${o.size}%`;
     node.style.transform=`translate(-50%,-50%) rotate(${o.rotate}deg)`;
     node.style.zIndex=o.z;
-    node.innerHTML=`<div class="sprite-object" style="background-position:${spritePosition(asset)}"></div>`;
+    node.innerHTML=`${spriteClip(asset, "sprite-object")}`;
     node.addEventListener("pointerdown",startObjectPointer);
     objectLayer.appendChild(node);
   });
@@ -179,7 +184,7 @@ document.getElementById("randomBtn").addEventListener("click",()=>{
 });
 
 function loadSprite(){
-  return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src="sprite.png?v=12";});
+  return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src="sprite.png?v=13";});
 }
 async function exportPng(){
   const canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1350;
