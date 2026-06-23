@@ -154,8 +154,8 @@ function select(node){
   [...document.querySelectorAll(".movable")].forEach(n=>n.classList.remove("is-selected"));
   if(selected){
     selected.classList.add("is-selected");
-    scaleRange.value = selected.dataset.scale || 1;
-    rotateRange.value = selected.dataset.rotate || 0;
+    if(scaleRange) scaleRange.value = selected.dataset.scale || 1;
+    if(rotateRange) rotateRange.value = selected.dataset.rotate || 0;
     setLocked(selected, isLocked(selected));
     selectionBox.setAttribute("display","block");
     updateSelectionBox();
@@ -273,12 +273,12 @@ function onPointerMove(evt){
   } else if(gesture.type==="rotate" && evt.pointerId===gesture.pointerId){
     const angle=Math.atan2(p.y-gesture.center.y,p.x-gesture.center.x)*180/Math.PI;
     node.dataset.rotate=gesture.startRotate+(angle-gesture.startAngle);
-    rotateRange.value=node.dataset.rotate;
+    if(rotateRange) rotateRange.value=node.dataset.rotate;
     updateTransform(node);
   } else if(gesture.type==="scale" && evt.pointerId===gesture.pointerId){
     const dist=Math.max(1,Math.hypot(p.x-gesture.center.x,p.y-gesture.center.y));
     node.dataset.scale=Math.min(3,Math.max(.25,gesture.startScale*(dist/gesture.startDistance)));
-    scaleRange.value=node.dataset.scale;
+    if(scaleRange) scaleRange.value=node.dataset.scale;
     updateTransform(node);
   } else if(gesture.type==="pinch" && gesture.ids.includes(evt.pointerId)){
     const pts=gesture.ids.map(id=>activePointers.get(id)?.point).filter(Boolean);
@@ -291,7 +291,7 @@ function onPointerMove(evt){
       node.dataset.rotate=gesture.startRotate+(angle-gesture.startAngle);
       node.dataset.x=gesture.origin.x+(center.x-gesture.startCenter.x);
       node.dataset.y=gesture.origin.y+(center.y-gesture.startCenter.y);
-      scaleRange.value=node.dataset.scale; rotateRange.value=node.dataset.rotate;
+      if(scaleRange) scaleRange.value=node.dataset.scale; rotateRange.value=node.dataset.rotate;
       updateTransform(node);
     }
   }
@@ -319,10 +319,12 @@ rotateHandle.addEventListener("pointerdown",(e)=>beginHandleGesture(e,"rotate"))
 scaleHandle.addEventListener("pointerdown",(e)=>beginHandleGesture(e,"scale"));
 const scaleRange = document.getElementById("scaleRange");
 const rotateRange = document.getElementById("rotateRange");
-scaleRange.addEventListener("input",()=>{if(selected){selected.dataset.scale=scaleRange.value;updateTransform(selected);}});
-rotateRange.addEventListener("input",()=>{if(selected){selected.dataset.rotate=rotateRange.value;updateTransform(selected);}});
+scaleRange?.addEventListener("input",()=>{if(selected){selected.dataset.scale=scaleRange.value;updateTransform(selected);}});
+rotateRange?.addEventListener("input",()=>{if(selected){selected.dataset.rotate=rotateRange.value;updateTransform(selected);}});
 
-document.getElementById("removeSelected").addEventListener("click",()=>{
+// The visible delete action now lives in the on-canvas toolbar.
+// Keep this optional for older layouts only.
+document.getElementById("removeSelected")?.addEventListener("click",()=>{
   if(selected){pushUndo(); selected.remove(); select(null);}
 });
 document.getElementById("forwardBtn").addEventListener("click",()=>{
