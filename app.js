@@ -176,10 +176,14 @@ function updateSelectionBox(){
   selectionRect.setAttribute("y", m.y);
   selectionRect.setAttribute("width", m.w);
   selectionRect.setAttribute("height", m.h);
-  deleteHandle.setAttribute("transform", `translate(${m.x} ${m.y})`);
-  lockHandle.setAttribute("transform", `translate(${m.x + m.w} ${m.y})`);
-  rotateHandle.setAttribute("transform", `translate(${m.x + m.w} ${m.y + m.h})`);
-  scaleHandle.setAttribute("transform", `translate(${m.x} ${m.y + m.h})`);
+  // Keep all controls directly below the selected object, in an easy-to-reach row.
+  // Stay above the exported footer so the controls remain tappable.
+  const toolbarY = Math.min(m.y + m.h + 62, 1110);
+  const startX = Math.max(72, Math.min(m.cx - 105, 1008 - 210));
+  scaleHandle.setAttribute("transform", `translate(${startX} ${toolbarY})`);
+  rotateHandle.setAttribute("transform", `translate(${startX + 70} ${toolbarY})`);
+  lockHandle.setAttribute("transform", `translate(${startX + 140} ${toolbarY})`);
+  deleteHandle.setAttribute("transform", `translate(${startX + 210} ${toolbarY})`);
   lockIcon.textContent = isLocked(selected) ? "🔒" : "🔓";
 }
 function svgPoint(evt){
