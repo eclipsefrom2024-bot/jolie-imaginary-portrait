@@ -141,7 +141,14 @@ function beginTool(type,e){
     startDistance:Math.hypot(p.x-selected.x,p.y-selected.y)
   };
 }
-document.getElementById("scaleHandle").addEventListener("pointerdown",e=>beginTool("scale",e));
+function adjustSelectedSize(delta){
+  if(!selected || selected.locked) return;
+  saveState();
+  selected.size = Math.max(8, Math.min(60, selected.size + delta));
+  renderObjects();
+}
+document.getElementById("shrinkHandle").addEventListener("click",(e)=>{e.preventDefault(); e.stopPropagation(); adjustSelectedSize(-3);});
+document.getElementById("scaleHandle").addEventListener("click",(e)=>{e.preventDefault(); e.stopPropagation(); adjustSelectedSize(3);});
 document.getElementById("rotateHandle").addEventListener("pointerdown",e=>beginTool("rotate",e));
 document.getElementById("lockHandle").addEventListener("click",()=>{if(selected){selected.locked=!selected.locked;renderObjects();}});
 document.getElementById("deleteHandle").addEventListener("click",()=>{if(selected){saveState();objects=objects.filter(o=>o.id!==selected.id);selected=null;renderObjects();}});
@@ -172,7 +179,7 @@ document.getElementById("randomBtn").addEventListener("click",()=>{
 });
 
 function loadSprite(){
-  return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src="sprite.png?v=10";});
+  return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src="sprite.png?v=12";});
 }
 async function exportPng(){
   const canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1350;
