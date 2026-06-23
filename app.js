@@ -393,40 +393,75 @@ document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>
   tab.classList.add("active"); activeTab=tab.dataset.tab; renderAssets();
 }));
 
-function serializeSvgForExport(){
-  const clone = artboard.cloneNode(true);
-  clone.querySelector("#selectionBox")?.remove();
-  clone.setAttribute("width","1080"); clone.setAttribute("height","1350");
-  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
-  const style = document.createElementNS(svgNS,"style");
-  style.textContent = `.export-title{font-family:Georgia,serif;font-size:46px;font-weight:700;fill:#171514}.export-sub{font-family:Arial,sans-serif;font-size:17px;font-weight:700;fill:#2d2924}.export-meta{font-family:Arial,sans-serif;font-size:14px;fill:#5f574f}`;
-  clone.insertBefore(style, clone.firstChild);
-  return new XMLSerializer().serializeToString(clone);
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const image = new Image();
+    image.onload = ()=>resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
 }
+
 async function exportPortraitBlob(){
-  const svgText=serializeSvgForExport();
-  const blob=new Blob([svgText],{type:"image/svg+xml;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
+  // Export directly from the canvas object data instead of rasterizing the whole SVG.
+  // This is much more reliable on iPhone Safari when the artwork contains SVG data-URI images.
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext("2d");
 
-  try{
-    const img = await new Promise((resolve,reject)=>{
-      const image = new Image();
-      image.onload=()=>resolve(image);
-      image.onerror=reject;
-      image.src=url;
-    });
-    const canvas=document.createElement("canvas");
-    canvas.width=1080;
-    canvas.height=1350;
-    const ctx=canvas.getContext("2d");
-    ctx.fillStyle=bg.getAttribute("fill");
-    ctx.fillRect(0,0,1080,1350);
-    ctx.drawImage(img,0,0);
+  // Background
+  ctx.fillStyle = bg.getAttribute("fill") || "#F7F2E8";
+  ctx.fillRect(0, 0, 1080, 1350);
 
-    return await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
-  } finally {
-    URL.revokeObjectURL(url);
+  async function drawLayer(layer){
+    const objects = [...layer.querySelectorAll(".movable")];
+    for(const object of objects){
+      const imageNode = object.querySelector("image");
+      if(!imageNode) continue;
+
+      const src = imageNode.getAttribute("href") || imageNode.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      if(!src) continue;
+
+      const image = await loadImage(src);
+      const x = parseFloat(object.dataset.x || "540");
+      const y = parseFloat(object.dataset.y || "540");
+      const scale = parseFloat(object.dataset.scale || "1");
+      const rotate = parseFloat(object.dataset.rotate || "0") * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotate);
+      ctx.scale(scale, scale);
+      ctx.translate(-120, -120);
+      ctx.drawImage(image, 0, 0, 240, 240);
+      ctx.restore();
+    }
   }
+
+  // Keep the same layer order as the interactive canvas.
+  await drawLayer(decorationLayer);
+  await drawLayer(portraitLayer);
+
+  // Footer lockup
+  ctx.fillStyle = "rgba(255,255,255,.92)";
+  ctx.fillRect(0, 1170, 1080, 180);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#171514";
+  ctx.font = "700 46px Georgia, serif";
+  ctx.fillText("我的想像肖像", 540, 1225);
+
+  ctx.fillStyle = "#2D2924";
+  ctx.font = "700 17px Arial, sans-serif";
+  ctx.fillText("PICASSO IMAGINARY PORTRAITS · 莉．瓷藝博物館", 540, 1270);
+
+  ctx.fillStyle = "#5F574F";
+  ctx.font = "14px Arial, sans-serif";
+  ctx.fillText("2026.07.01–09.30 · #MyImaginaryPortrait #JolieMuseum", 540, 1312);
+
+  return await new Promise(resolve=>canvas.toBlob(resolve, "image/png"));
 }
 
 document.getElementById("downloadBtn").addEventListener("click", async ()=>{
