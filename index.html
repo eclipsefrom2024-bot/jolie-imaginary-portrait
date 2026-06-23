@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#efe9df">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#efe9df" />
   <title>我的想像肖像｜莉．瓷藝博物館</title>
-  <link rel="stylesheet" href="style.css?v=10">
+  <!-- v11: scale handle supports shrinking and enlarging -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
@@ -15,55 +16,104 @@
       <p>拼出一張不按規則的臉，留下你的夏日藝術記憶。</p>
     </header>
 
-    <section class="controls-card">
-      <h2>1. 選擇素材</h2>
-      <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="faces" type="button">臉型</button>
-        <button class="tab" data-tab="eyes" type="button">眼睛</button>
-        <button class="tab" data-tab="features" type="button">五官</button>
-        <button class="tab" data-tab="style" type="button">配件</button>
-        <button class="tab" data-tab="decor" type="button">花紋</button>
-      </div>
-      <div id="assetGrid" class="asset-grid"></div>
-
-      <h2>2. 背景與圖層</h2>
-      <div id="bgPalette" class="bg-palette"></div>
-      <div class="mini-actions">
-        <button id="forwardBtn" type="button">往前一層</button>
-        <button id="backBtn" type="button">往後一層</button>
-        <button id="undoBtn" type="button">↶ 復原</button>
-        <button id="resetBtn" type="button">重設</button>
-        <button id="randomBtn" type="button">隨機靈感</button>
-      </div>
-      <div class="cafe-note">點選畫布物件後，可直接在物件正下方放大、旋轉、鎖定或刪除。</div>
-    </section>
-
-    <section class="canvas-card">
-      <div class="canvas-topline">
-        <span>3. 我的想像肖像畫</span>
-        <span>點物件開始編輯</span>
-      </div>
-      <div id="artboard" class="artboard" aria-label="可編輯想像肖像畫布">
-        <div id="objectLayer" class="object-layer"></div>
-        <div id="toolbar" class="object-toolbar hidden">
-          <button id="scaleHandle" aria-label="放大縮小">＋</button>
-          <button id="rotateHandle" aria-label="旋轉">↻</button>
-          <button id="lockHandle" aria-label="鎖定">🔒</button>
-          <button id="deleteHandle" aria-label="刪除">×</button>
+    <section class="editor-wrap editor-v4" aria-label="肖像編輯器">
+      <aside class="controls-card">
+        <div class="step-title">1. 選擇素材</div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="faces" type="button">臉型</button>
+          <button class="tab" data-tab="eyes" type="button">眼睛</button>
+          <button class="tab" data-tab="features" type="button">五官</button>
+          <button class="tab" data-tab="style" type="button">配件</button>
+          <button class="tab" data-tab="decor" type="button">花紋</button>
         </div>
-        <div class="export-footer">
-          <strong>我的想像肖像</strong>
-          <span>PICASSO IMAGINARY PORTRAITS · 莉．瓷藝博物館</span>
-          <small>2026.07.01–09.30 · #MyImaginaryPortrait #JolieMuseum</small>
+        <div id="assetGrid" class="asset-grid"></div>
+
+        <div class="step-title">2. 圖層與背景</div>
+        <div class="mini-actions">
+          <button id="forwardBtn" type="button">往前一層</button>
+          <button id="backBtn" type="button">往後一層</button>
+          <button id="undoBtn" type="button">↶ 復原</button>
+          <button id="resetBtn" type="button">重設</button>
+          <button id="randomBtn" type="button">隨機靈感</button>
         </div>
+
+        <div class="step-title">背景色</div>
+        <div id="bgPalette" class="bg-palette"></div>
+
+        <div class="cafe-note">
+          <strong>小提醒</strong><br>
+          點選畫布上的物件後，可直接在物件正下方放大、旋轉、鎖定或刪除。
+        </div>
+      </aside>
+
+      <div class="canvas-card">
+        <div class="canvas-topline">
+          <span>3. 我的想像肖像畫</span>
+          <span class="canvas-hint">點物件開始編輯</span>
+        </div>
+
+        <svg id="artboard" viewBox="0 0 1080 1350" role="img" aria-label="可編輯想像肖像畫布" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="14" stdDeviation="14" flood-opacity=".18"/>
+            </filter>
+          </defs>
+          <rect id="bg" x="0" y="0" width="1080" height="1350" fill="#F7F2E8"/>
+          <g id="decorationLayer"></g>
+          <g id="portraitLayer"></g>
+          <g id="overlayLayer"></g>
+
+          <g id="footerLayer">
+            <rect x="0" y="1170" width="1080" height="180" fill="rgba(255,255,255,.92)"/>
+            <text x="540" y="1233" text-anchor="middle" class="export-title">我的想像肖像</text>
+            <text x="540" y="1275" text-anchor="middle" class="export-sub">PICASSO IMAGINARY PORTRAITS · 莉．瓷藝博物館</text>
+            <text x="540" y="1315" text-anchor="middle" class="export-meta">2026.07.01–09.30 · #MyImaginaryPortrait #JolieMuseum</text>
+          </g>
+
+          <g id="selectionBox" display="none">
+            <rect id="selectionRect" x="0" y="0" width="0" height="0" rx="12" fill="none" stroke="#1C1A18" stroke-width="5" stroke-dasharray="14 10" pointer-events="none"/>
+            <g id="objectToolbar">
+              <g id="scaleHandle" class="object-handle" role="button" aria-label="放大縮小物件">
+                <circle r="27" fill="#E5A63F" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="27" fill="#1C1A18">＋</text>
+              </g>
+              <g id="rotateHandle" class="object-handle" role="button" aria-label="旋轉物件">
+                <circle r="27" fill="#1B6F7A" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="25" fill="#fff">↻</text>
+              </g>
+              <g id="lockHandle" class="object-handle" role="button" aria-label="鎖定物件">
+                <circle r="27" fill="#1C1A18" stroke="#fff" stroke-width="5"/>
+                <text id="lockIcon" text-anchor="middle" y="8" font-size="20" fill="#fff">🔒</text>
+              </g>
+              <g id="deleteHandle" class="object-handle" role="button" aria-label="刪除物件">
+                <circle r="27" fill="#C94F4F" stroke="#fff" stroke-width="5"/>
+                <text text-anchor="middle" y="9" font-size="26" fill="#fff">×</text>
+              </g>
+            </g>
+          </g>
+        </svg>
       </div>
     </section>
 
     <section class="download-zone">
-      <button id="downloadBtn" class="download-final" type="button">儲存／分享我的肖像畫</button>
-      <p>手機會開啟分享面板；選擇「儲存影像」即可存進相簿。</p>
+      <button id="downloadBtn" class="primary download-final" type="button">下載我的肖像畫</button>
+      <p>完成後，出示作品畫面至寶德旺 Café 享限定優惠。</p>
+    </section>
+
+    <section class="howto">
+      <div><b>①</b> 點選素材加入畫布</div>
+      <div><b>②</b> 用手指拖曳到想放的位置</div>
+      <div><b>③</b> 下載、分享，帶著作品去喝一杯</div>
     </section>
   </main>
-  <script src="app.js?v=10"></script>
+
+  <template id="assetTemplate">
+    <button class="asset-btn" type="button">
+      <span class="asset-preview"></span>
+      <span class="asset-name"></span>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
 </body>
 </html>
