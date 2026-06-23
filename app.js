@@ -403,24 +403,71 @@ function serializeSvgForExport(){
   clone.insertBefore(style, clone.firstChild);
   return new XMLSerializer().serializeToString(clone);
 }
-document.getElementById("downloadBtn").addEventListener("click",()=>{
+async function exportPortraitBlob(){
   const svgText=serializeSvgForExport();
   const blob=new Blob([svgText],{type:"image/svg+xml;charset=utf-8"});
   const url=URL.createObjectURL(blob);
-  const img=new Image();
-  img.onload=()=>{
+
+  try{
+    const img = await new Promise((resolve,reject)=>{
+      const image = new Image();
+      image.onload=()=>resolve(image);
+      image.onerror=reject;
+      image.src=url;
+    });
     const canvas=document.createElement("canvas");
-    canvas.width=1080; canvas.height=1350;
+    canvas.width=1080;
+    canvas.height=1350;
     const ctx=canvas.getContext("2d");
-    ctx.fillStyle=bg.getAttribute("fill"); ctx.fillRect(0,0,1080,1350);
+    ctx.fillStyle=bg.getAttribute("fill");
+    ctx.fillRect(0,0,1080,1350);
     ctx.drawImage(img,0,0);
+
+    return await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+  } finally {
     URL.revokeObjectURL(url);
-    const a=document.createElement("a");
-    a.download="my-imaginary-portrait-jolie-museum.png";
-    a.href=canvas.toDataURL("image/png");
+  }
+}
+
+document.getElementById("downloadBtn").addEventListener("click", async ()=>{
+  const btn = document.getElementById("downloadBtn");
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "正在生成作品…";
+
+  try{
+    const pngBlob = await exportPortraitBlob();
+    if(!pngBlob) throw new Error("PNG export failed");
+
+    const filename = "my-imaginary-portrait-jolie-museum.png";
+    const file = new File([pngBlob], filename, {type:"image/png"});
+
+    // On iPhone / Android, prefer native share sheet so visitors can choose “Save Image”.
+    // Share only the image file for broader iOS compatibility.
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+      return;
+    }
+
+    // Desktop / unsupported browser fallback: regular download.
+    const url = URL.createObjectURL(pngBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-  };
-  img.src=url;
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  } catch(err){
+    // User cancelling the share sheet is not an error that needs an alert.
+    if(err?.name !== "AbortError"){
+      console.error(err);
+      alert("目前無法產生圖片，請再試一次。");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
 });
 
 renderAssets();
